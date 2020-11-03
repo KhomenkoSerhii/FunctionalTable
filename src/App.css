@@ -1,0 +1,21 @@
+.wrapper {
+  padding: 40px;
+}
+
+.table {
+  height: 500px;
+  width: 800px;
+  margin: 0 auto 40px;
+}
+
+.buttons {
+  text-align: center;
+}
+
+.input-block {
+  width: 64px;
+  position: absolute;
+  height: 34px;
+  opacity: 0;
+  cursor: pointer;
+}
