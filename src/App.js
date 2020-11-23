@@ -1,10 +1,13 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { AgGridReact } from "ag-grid-react";
 import { AllModules } from "ag-grid-enterprise";
+import moment from "moment";
 
 import { Button } from "@material-ui/core";
 
-import { DEFAULT_CONFIG, DATA, COLUMNS } from "./data";
+import Chart from "./components/Chart";
+
+import { DEFAULT_CONFIG, DATA, COLUMNS } from "./constants";
 
 import "ag-grid-community/dist/styles/ag-grid.css";
 import "ag-grid-community/dist/styles/ag-theme-balham.css";
@@ -20,12 +23,12 @@ const App = () => {
     gridApi.sizeColumnsToFit();
   };
 
-  const copyData = (e) => {
+  const copyData = () => {
     const copiedData =
       gridApi &&
       gridApi.getDataAsCsv().replace(/["]+/g, "").replace(/,/g, "\t");
     navigator.clipboard.writeText(copiedData);
-    // console.log(copiedData);
+    console.log(copiedData);
   };
 
   const [selectedFile, setSelectedFile] = useState(null);
@@ -68,38 +71,66 @@ const App = () => {
     });
   };
 
+  const formatValue = (type, params) => {
+    switch (type) {
+      case "date":
+        return moment(params.value).format("DD/MM/YYYY")
+      default:
+        return params.value;
+    }
+  };
+  
+
+  const [formatedDate, setFormatedDate] = useState([])
+
+    useEffect(() => {
+      const filtered =[]
+        DATA.forEach((i) => {  
+          const formatedDateItem = moment(i.date).format("DD/MM/YYYY")
+          filtered.push({...i, date: formatedDateItem})
+        })
+      setFormatedDate([...filtered])
+  },[DATA])
+
+
   return (
     <div className="wrapper">
       <div className="ag-theme-balham table">
         <AgGridReact
           modules={AllModules}
-          columnDefs={selectedFile ? selectedFile : COLUMNS}
+          columnDefs={selectedFile ? selectedFile : COLUMNS.map((item) => ({
+            ...item,
+            // valueFormatter: (params) => formatValue(item.type, params),
+          }))}
           defaultColDef={DEFAULT_CONFIG}
-          rowData={DATA}
+          rowData={formatedDate}
           onGridReady={initTable}
         />
+        <div className="buttons">
+          <Button variant="outlined" onClick={copyData}>
+            Copy
+          </Button>
+
+          <Button variant="outlined" style={{ position: "relative" }}>
+            Load
+            <input
+              className="input-block"
+              variant="outlined"
+              onChange={loadData}
+              type="file"
+            />
+          </Button>
+          <Button variant="outlined" onClick={saveData}>
+            Save
+          </Button>
+          <Button variant="outlined" onClick={pasteData}>
+            Paste
+          </Button>
+        </div>
       </div>
-      <div className="buttons">
-        <Button variant="outlined" onClick={copyData}>
-          Copy
-        </Button>
 
-        <Button variant="outlined" style={{ position: "relative" }}>
-          Load
-          <input
-            className="input-block"
-            variant="outlined"
-            onChange={loadData}
-            type="file"
-          />
-        </Button>
-
-        <Button variant="outlined" onClick={saveData}>
-          Save
-        </Button>
-        <Button variant="outlined" onClick={pasteData}>
-          Paste
-        </Button>
+      <div className="chart">
+        <Chart />
       </div>
     </div>
   );
