@@ -14,6 +14,7 @@ import "ag-grid-community/dist/styles/ag-theme-balham.css";
 import "ag-grid-community/dist/styles/ag-theme-balham-dark.css";
 
 import "./App.css";
+import { data } from "./components/Chart/mock";
 
 let gridApi = null;
 
@@ -27,9 +28,27 @@ const App = () => {
     const copiedData =
       gridApi &&
       gridApi.getDataAsCsv().replace(/["]+/g, "").replace(/,/g, "\t");
-    navigator.clipboard.writeText(copiedData);
-    console.log(copiedData);
+    navigator.clipboard.writeText(formatData(copiedData));
+    console.log(formatData(copiedData));
   };
+
+  const formatData = (data) => {
+    let indexOfDate
+    return data.split('\n').map(r => r.split('\t')).map((r, i) => {
+      if (i === 0) {
+        r.map((item, index) => {
+          if (item.includes('Date')) {
+            return indexOfDate = index
+          }
+        })
+        return r
+      } else {
+        r[indexOfDate] = moment(+r[indexOfDate]).format('DD/MM/YYYY')
+        return r
+      }
+    }).map(r => r.join('\t')).join('\n')
+  }
+
 
   const [selectedFile, setSelectedFile] = useState(null);
 
@@ -79,18 +98,18 @@ const App = () => {
         return params.value;
     }
   };
-  
+
 
   const [formatedDate, setFormatedDate] = useState([])
 
-    useEffect(() => {
-      const filtered =[]
-        DATA.forEach((i) => {  
-          const formatedDateItem = moment(i.date).format("DD/MM/YYYY")
-          filtered.push({...i, date: formatedDateItem})
-        })
-      setFormatedDate([...filtered])
-  },[DATA])
+  useEffect(() => {
+    const filtered = []
+    DATA.forEach((i) => {
+      const formatedDateItem = moment(i.date).format("DD/MM/YYYY")
+      filtered.push({ ...i, date: formatedDateItem })
+    })
+    setFormatedDate([...filtered])
+  }, [DATA])
 
 
   return (
@@ -100,10 +119,10 @@ const App = () => {
           modules={AllModules}
           columnDefs={selectedFile ? selectedFile : COLUMNS.map((item) => ({
             ...item,
-            // valueFormatter: (params) => formatValue(item.type, params),
+            valueFormatter: (params) => formatValue(item.type, params),
           }))}
           defaultColDef={DEFAULT_CONFIG}
-          rowData={formatedDate}
+          rowData={DATA}
           onGridReady={initTable}
         />
         <div className="buttons">
